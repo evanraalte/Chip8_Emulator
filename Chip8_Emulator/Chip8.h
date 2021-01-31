@@ -3,12 +3,24 @@
 #include "Memory.h"
 #include "Font.h"
 
+// Follow: https://tobiasvl.github.io/blog/write-a-chip-8-emulator/
+
 class Chip8
 {
 public:
 	Chip8(void);
+	uint16_t stack_pop();
+	void stack_push(uint16_t data);
+
+
 	Memory mem;
-private:
-	static array<uint8_t, 80> font_data;
+	uint16_t pc;
+	uint16_t idx;
+	vector<uint16_t> stack;
+	uint8_t delay_timer;
+	uint8_t sound_timer;
+	array<uint8_t, 16> v;
+
+
 };
 
