@@ -2,9 +2,16 @@
 //
 
 #include "std_lib_facilities.h"
+#include "Chip8.h"
+
 
 int main()
 {
+    Chip8 c8 = Chip8();
+
+    for (int i = 0; i < 80; i++) {
+        cout << c8.mem.read(i) << endl;
+    }
     std::cout << "Hello World!\n";
 }
 
