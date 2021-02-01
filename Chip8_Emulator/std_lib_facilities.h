@@ -43,7 +43,9 @@ Revised August 3, 2020: a cleanup removing support for ancient compilers
 #include <regex>
 #include<random>
 #include<stdexcept>
-
+#include<thread>
+#include <chrono>
+#include <functional>
 //------------------------------------------------------------------------------
 
 
@@ -52,6 +54,7 @@ typedef long Unicode;
 //------------------------------------------------------------------------------
 
 using namespace std;
+using namespace std::placeholders;
 
 template<class T> string to_string(const T& t)
 {

@@ -11,8 +11,9 @@ public:
 	Chip8(void);
 	uint16_t stack_pop();
 	void stack_push(uint16_t data);
-
-
+	void decrement_timers(void);
+	void run(int val);
+	void cb_input(int c);
 	Memory mem;
 	uint16_t pc;
 	uint16_t idx;
@@ -20,7 +21,5 @@ public:
 	uint8_t delay_timer;
 	uint8_t sound_timer;
 	array<uint8_t, 16> v;
-
-
 };
 

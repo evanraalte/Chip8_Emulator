@@ -5,14 +5,30 @@
 #include "Chip8.h"
 
 
+void get_input(function<void(int)> cb) {
+    while (true) {
+        string input;
+        cin >> input;
+        int num = (int)input.at(0);
+        cb(num);
+        //cout << "Inp:" << input << endl << flush;
+    }
+}
+
+
 int main()
 {
     Chip8 c8 = Chip8();
 
-    for (int i = 0; i < 80; i++) {
-        cout << c8.mem.read(i) << endl;
-    }
-    std::cout << "Hello World!\n";
+    auto fp = bind(&Chip8::cb_input, c8, _1);
+
+    thread t_inp(get_input, fp);
+    thread t_run(&Chip8::run, c8, 0);
+
+    t_inp.join();
+    //t_run.join();
+    
+
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
