@@ -4,13 +4,18 @@
 #include "std_lib_facilities.h"
 #include "Chip8.h"
 
+#define KEY_EXIT 27 // ESC
 
 void get_input(function<void(int)> cb) {
     while (true) {
-        string input;
-        cin >> input;
-        int num = (int)input.at(0);
+        char input;
+        //cin >> input;
+        input = _getch();
+        int num = (int)input;
+        if (num == KEY_EXIT)
+            return;
         cb(num);
+
         //cout << "Inp:" << input << endl << flush;
     }
 }
@@ -22,11 +27,11 @@ int main()
 
     auto fp = bind(&Chip8::cb_input, c8, _1);
 
-    thread t_inp(get_input, fp);
     thread t_run(&Chip8::run, c8, 0);
+    thread t_inp(get_input, fp);
 
     t_inp.join();
-    //t_run.join();
+
     
 
 }

@@ -46,6 +46,7 @@ Revised August 3, 2020: a cleanup removing support for ancient compilers
 #include<thread>
 #include <chrono>
 #include <functional>
+#include<conio.h>
 //------------------------------------------------------------------------------
 
 
