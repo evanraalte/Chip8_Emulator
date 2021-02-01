@@ -1,8 +1,32 @@
 #include "Chip8.h"
 
 
+
+map<int, int> Chip8::key_map = {
+	{ KEY_1, 0x1 },
+	{ KEY_2, 0x2 },
+	{ KEY_3, 0x3 },
+	{ KEY_4, 0xC },
+	{ KEY_Q, 0x4 },
+	{ KEY_W, 0x5 },
+	{ KEY_E, 0x6 },
+	{ KEY_R, 0xD },
+	{ KEY_A, 0x7 },
+	{ KEY_S, 0x8 },
+	{ KEY_D, 0x9 },
+	{ KEY_F, 0xE },
+	{ KEY_Z, 0xA },
+	{ KEY_X, 0x0 },
+	{ KEY_C, 0xB },
+	{ KEY_V, 0xF },
+};
+
 Chip8::Chip8(void)
 	: mem(4096) {
+
+	// Init frame_buffer
+	for(int i = 0; i < frame_buffer.size(); i++)
+		frame_buffer[i].fill(false);
 
 	// Initialize fonts in memory
 	Font font = Font();
@@ -15,8 +39,8 @@ Chip8::Chip8(void)
 	// Init registers
 	for (int i = 0; i < v.size(); i++)
 		v[i] = 0;
-	pc  = 0x0200;
-	idx = 0x0000;
+	pc    = 0x0200;
+	reg_i = 0x0000;
 
 	// Init timers
 	delay_timer = 0;
@@ -45,14 +69,99 @@ void Chip8::decrement_timers(void)
 void Chip8::run(int val)
 {
 	while (true) {
-		this_thread::sleep_for(chrono::seconds(1));
-		cout << "running" << endl << flush;
+		cout << to_string(pc) << endl;
+		// Fetch
+		uint16_t msb = (uint16_t) mem.read(pc);
+		uint16_t lsb = (uint16_t) mem.read(pc+1);
+		pc += 2;
+		uint16_t instruction = (msb << 8) | lsb;
+
+		// Decode
+		uint8_t opc   = (0xF000 & instruction) >> 12;
+		uint8_t x     = (0x0F00 & instruction) >> 8;
+		uint8_t y     = (0x00F0 & instruction) >> 4;
+		uint8_t n     = (0x000F & instruction);
+		uint8_t nn    = (0x00FF & instruction);
+		uint16_t nnn  = (0x0FFF & instruction);
+
+		// Execute
+		switch (opc) {
+		case 0x0: 
+			if (nn == 0xE0) {
+				cout << "clear screen" << endl;
+				// clear screen
+			}
+			break;
+		case 0x1:
+			cout << "jump to " << to_string((int) nnn) << endl;
+			pc = nnn;
+			break;
+		case 0x6:
+			cout << "set v[" << to_string((int)x) << "] to " << to_string((int) nn )<< endl;
+			v[x] = nn;
+			break;
+		case 0x7:
+			cout << "set v[" << to_string((int)x) << "] to " << to_string((int) (v[x] + nn)) << endl;
+			v[x] += nn;
+			break;
+		case 0xA:
+			cout << "set I to " << to_string((int)nnn) << endl;
+			reg_i = nnn;
+			break;
+		case 0xD:
+			// draw
+			cout << "Draw.." << endl;
+
+			uint8_t pos_x       = v[x] % 64;
+			uint8_t pos_y       = v[y] % 32;
+			uint8_t sprite_data = mem.read(reg_i);
+			v[0xf]              = 0;
+			for (int j = 0; j < n; j++){
+				for (int i = 7; i >= 0; i--) {
+					bool px_data = (sprite_data >> i) & 0x1;
+					cout << to_string((int)pos_x) << " " << to_string((int)pos_y) << endl;
+					if (px_data) {
+						if (frame_buffer[pos_x][pos_y])
+							v[0xf] = 1;
+						else
+							frame_buffer[pos_x][pos_y] = true;
+					}
+					pos_x++;
+					if (pos_x >= 64)
+						break;
+				}
+				pos_y++;
+				if (pos_y >= 32)
+					break;
+			}
+			break;
+		}
+
+		//this_thread::sleep_for(chrono::seconds(1));
+		//cout << "running" << endl << flush;
 	}
 }
 
 void Chip8::cb_input(int c)
 {
-	cout << "Pressed: " << to_string(c) << endl << flush;
+
+	cout << "Pressed: " << to_string(key_map[c]) << endl << flush;
+
+}
+
+void Chip8::load_file(string path)
+{
+	ifstream f(path, ios::in | ios::binary);
+	char buffer;
+	uint16_t address = 0x200;
+	while (f) {
+		f.read(&buffer, 1);
+		cout << to_string((int) buffer) << endl;
+		mem.write(address, (uint8_t) buffer);
+		address++;
+	}
+
+	f.close();
 }
 
 

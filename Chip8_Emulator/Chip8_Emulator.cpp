@@ -4,7 +4,7 @@
 #include "std_lib_facilities.h"
 #include "Chip8.h"
 
-#define KEY_EXIT 27 // ESC
+constexpr auto KEY_EXIT = 27; // ESC
 
 void get_input(function<void(int)> cb) {
     while (true) {
@@ -15,8 +15,6 @@ void get_input(function<void(int)> cb) {
         if (num == KEY_EXIT)
             return;
         cb(num);
-
-        //cout << "Inp:" << input << endl << flush;
     }
 }
 
@@ -24,16 +22,15 @@ void get_input(function<void(int)> cb) {
 int main()
 {
     Chip8 c8 = Chip8();
-
+    c8.load_file("IBM.ch8");
     auto fp = bind(&Chip8::cb_input, c8, _1);
 
-    thread t_run(&Chip8::run, c8, 0);
-    thread t_inp(get_input, fp);
+    //thread t_run(&Chip8::run, c8, 0);
+    //thread t_inp(get_input, fp);
 
-    t_inp.join();
-
-    
-
+    //t_inp.join();
+    while (true)
+        c8.run(0);
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

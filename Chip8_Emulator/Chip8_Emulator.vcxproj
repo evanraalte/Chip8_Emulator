@@ -152,6 +152,9 @@
   <ItemGroup>
     <ResourceCompile Include="Chip8_Emulator.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="IBM.ch8" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
