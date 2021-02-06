@@ -3,7 +3,6 @@
 
 #include "std_lib_facilities.h"
 #include "Chip8.h"
-
 constexpr auto KEY_EXIT = 27; // ESC
 
 void get_input(function<void(int)> cb) {
@@ -22,6 +21,7 @@ void get_input(function<void(int)> cb) {
 int main()
 {
     Chip8 c8 = Chip8();
+
     c8.load_file("IBM.ch8");
     auto fp = bind(&Chip8::cb_input, c8, _1);
 
@@ -29,8 +29,10 @@ int main()
     //thread t_inp(get_input, fp);
 
     //t_inp.join();
-    while (true)
+    while (true) {
         c8.run(0);
+        //c8.render_frame();
+    }
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

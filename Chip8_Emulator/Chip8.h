@@ -2,7 +2,7 @@
 #include "std_lib_facilities.h"
 #include "Memory.h"
 #include "Font.h"
-
+#include "Display.h"
 // Follow: https://tobiasvl.github.io/blog/write-a-chip-8-emulator/
 
 constexpr auto BLA = 27; // ESC
@@ -25,11 +25,12 @@ constexpr auto KEY_C = 99;  // ESC
 constexpr auto KEY_V = 118; // ESC
 
 
-
+class Display;
 
 class Chip8
 {
 public:
+	Display display;
 	Chip8(void);
 	uint16_t stack_pop();
 	void stack_push(uint16_t data);
@@ -44,7 +45,8 @@ public:
 	uint8_t sound_timer;
 	array<uint8_t, 16> v;
 	static map<int, int> key_map;
-	array<array<bool, 64>, 32> frame_buffer;
+	array<array<bool, 32>, 64> frame_buffer;
 	void load_file(string path);
+	bool get_pixel(int x, int y);
 };
 

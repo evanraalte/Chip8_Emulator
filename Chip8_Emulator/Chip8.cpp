@@ -2,6 +2,7 @@
 
 
 
+
 map<int, int> Chip8::key_map = {
 	{ KEY_1, 0x1 },
 	{ KEY_2, 0x2 },
@@ -22,12 +23,14 @@ map<int, int> Chip8::key_map = {
 };
 
 Chip8::Chip8(void)
-	: mem(4096) {
+	: mem(4096), display(*this) {
 
 	// Init frame_buffer
-	for(int i = 0; i < frame_buffer.size(); i++)
-		frame_buffer[i].fill(false);
-
+	for (uint16_t i = 0; i < frame_buffer.size(); i++) {
+		bool fill = false;// i & 1;
+		//cout << fill << " " << i << endl;
+		frame_buffer[i].fill(fill);
+	}
 	// Initialize fonts in memory
 	Font font = Font();
 	uint16_t i = 0;
@@ -68,78 +71,74 @@ void Chip8::decrement_timers(void)
 
 void Chip8::run(int val)
 {
-	while (true) {
-		cout << to_string(pc) << endl;
-		// Fetch
-		uint16_t msb = (uint16_t) mem.read(pc);
-		uint16_t lsb = (uint16_t) mem.read(pc+1);
-		pc += 2;
-		uint16_t instruction = (msb << 8) | lsb;
+	cout << to_string(pc) << endl;
+	// Fetch
+	uint16_t msb = (uint16_t) mem.read(pc);
+	uint16_t lsb = (uint16_t) mem.read(pc+1);
+	pc += 2;
+	uint16_t instruction = (msb << 8) | lsb;
 
-		// Decode
-		uint8_t opc   = (0xF000 & instruction) >> 12;
-		uint8_t x     = (0x0F00 & instruction) >> 8;
-		uint8_t y     = (0x00F0 & instruction) >> 4;
-		uint8_t n     = (0x000F & instruction);
-		uint8_t nn    = (0x00FF & instruction);
-		uint16_t nnn  = (0x0FFF & instruction);
+	// Decode
+	uint8_t opc   = (0xF000 & instruction) >> 12;
+	uint8_t x     = (0x0F00 & instruction) >> 8;
+	uint8_t y     = (0x00F0 & instruction) >> 4;
+	uint8_t n     = (0x000F & instruction);
+	uint8_t nn    = (0x00FF & instruction);
+	uint16_t nnn  = (0x0FFF & instruction);
 
-		// Execute
-		switch (opc) {
-		case 0x0: 
-			if (nn == 0xE0) {
-				cout << "clear screen" << endl;
-				// clear screen
-			}
-			break;
-		case 0x1:
-			cout << "jump to " << to_string((int) nnn) << endl;
-			pc = nnn;
-			break;
-		case 0x6:
-			cout << "set v[" << to_string((int)x) << "] to " << to_string((int) nn )<< endl;
-			v[x] = nn;
-			break;
-		case 0x7:
-			cout << "set v[" << to_string((int)x) << "] to " << to_string((int) (v[x] + nn)) << endl;
-			v[x] += nn;
-			break;
-		case 0xA:
-			cout << "set I to " << to_string((int)nnn) << endl;
-			reg_i = nnn;
-			break;
-		case 0xD:
-			// draw
-			cout << "Draw.." << endl;
-
-			uint8_t pos_x       = v[x] % 64;
-			uint8_t pos_y       = v[y] % 32;
-			uint8_t sprite_data = mem.read(reg_i);
+	// Execute
+	switch (opc) {
+	case 0x0: 
+		if (nn == 0xE0) {
+			cout << "clear screen" << endl;
+			// clear screen
+		}
+		break;
+	case 0x1:
+		cout << "jump to " << to_string((int) nnn) << endl;
+		pc = nnn;
+		break;
+	case 0x6:
+		cout << "set v[" << to_string((int)x) << "] to " << to_string((int) nn )<< endl;
+		v[x] = nn;
+		break;
+	case 0x7:
+		cout << "set v[" << to_string((int)x) << "] to " << to_string((int) (v[x] + nn)) << endl;
+		v[x] += nn;
+		break;
+	case 0xA:
+		cout << "set I to " << to_string((int)nnn) << endl;
+		reg_i = nnn;
+		break;
+	case 0xD:
+		// draw
+		cout << "Draw.." << endl;
+		for (int j = 0; j < n; j++){
 			v[0xf]              = 0;
-			for (int j = 0; j < n; j++){
-				for (int i = 7; i >= 0; i--) {
-					bool px_data = (sprite_data >> i) & 0x1;
-					cout << to_string((int)pos_x) << " " << to_string((int)pos_y) << endl;
-					if (px_data) {
-						if (frame_buffer[pos_x][pos_y])
-							v[0xf] = 1;
-						else
-							frame_buffer[pos_x][pos_y] = true;
+			uint8_t pos_y       = (v[y] & 0x1F) + j ;
+			uint8_t pos_x       = v[x] & 0x3F;
+			uint8_t sprite_data = mem.read(reg_i + j);
+			for (int i = 7; i >= 0; i--) {
+				bool px_data = (sprite_data >> i) & 0x1;
+
+				if (px_data) {
+					if (frame_buffer[pos_x][pos_y]) {
+						frame_buffer[pos_x][pos_y] = false;
+						v[0xf] = 1;
 					}
-					pos_x++;
-					if (pos_x >= 64)
-						break;
+					else {
+						frame_buffer[pos_x][pos_y] = true;
+					}
 				}
-				pos_y++;
-				if (pos_y >= 32)
+				pos_x++;
+				if (pos_x >= 64)
 					break;
 			}
-			break;
 		}
-
-		//this_thread::sleep_for(chrono::seconds(1));
-		//cout << "running" << endl << flush;
+		break;
 	}
+	display.render_frame();
+	this_thread::sleep_for(chrono::milliseconds(100));
 }
 
 void Chip8::cb_input(int c)
@@ -162,6 +161,11 @@ void Chip8::load_file(string path)
 	}
 
 	f.close();
+}
+
+bool Chip8::get_pixel(int x, int y)
+{
+	return frame_buffer[x][y];
 }
 
 
