@@ -35,7 +35,7 @@ public:
 	uint16_t stack_pop();
 	void stack_push(uint16_t data);
 	void decrement_timers(void);
-	void run(int val);
+	void run(void);
 	void cb_input(int c);
 	Memory mem;
 	uint16_t pc;

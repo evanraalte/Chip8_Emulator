@@ -14,6 +14,7 @@ void get_input(function<void(int)> cb) {
         if (num == KEY_EXIT)
             return;
         cb(num);
+        //this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
 
@@ -23,16 +24,7 @@ int main()
     Chip8 c8 = Chip8();
 
     c8.load_file("IBM.ch8");
-    auto fp = bind(&Chip8::cb_input, c8, _1);
-
-    //thread t_run(&Chip8::run, c8, 0);
-    //thread t_inp(get_input, fp);
-
-    //t_inp.join();
-    while (true) {
-        c8.run(0);
-        //c8.render_frame();
-    }
+    c8.run();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

@@ -22,7 +22,5 @@ public:
 	int init(void);
 	void draw_pixel(int x, int y, bool on);
 	void render_frame();
-	void run(void);
-
 };
 

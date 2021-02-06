@@ -82,12 +82,3 @@ void Display::render_frame()
 	SDL_RenderPresent(gRenderer);
 	return;
 }
-
-void Display::run(void)
-{
-	init();
-
-	while (true) {
-
-	}
-}
