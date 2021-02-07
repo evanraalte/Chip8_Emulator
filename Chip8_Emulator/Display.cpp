@@ -59,6 +59,30 @@ int Display::init(void) {
 	return success;
 }
 
+void Display::get_keystate(void) {
+	SDL_Event e;
+	while ((SDL_PollEvent(&e)) != 0);
+
+	const Uint8 *keystate = SDL_GetKeyboardState(NULL);
+	int res = 0;
+	res |= keystate[SDL_SCANCODE_1] << 0x1;
+	res |= keystate[SDL_SCANCODE_2] << 0x2;
+	res |= keystate[SDL_SCANCODE_3] << 0x3;
+	res |= keystate[SDL_SCANCODE_4] << 0xC;
+	res |= keystate[SDL_SCANCODE_Q] << 0x4;
+	res |= keystate[SDL_SCANCODE_W] << 0x5;
+	res |= keystate[SDL_SCANCODE_E] << 0x6;
+	res |= keystate[SDL_SCANCODE_R] << 0xD;
+	res |= keystate[SDL_SCANCODE_A] << 0x7;
+	res |= keystate[SDL_SCANCODE_S] << 0x8;
+	res |= keystate[SDL_SCANCODE_D] << 0x9;
+	res |= keystate[SDL_SCANCODE_F] << 0xE;
+	res |= keystate[SDL_SCANCODE_Z] << 0xA;
+	res |= keystate[SDL_SCANCODE_X] << 0x0;
+	res |= keystate[SDL_SCANCODE_C] << 0xB;
+	res |= keystate[SDL_SCANCODE_V] << 0xF;
+	cout << to_string(res) << endl;
+}
 
 void Display::draw_pixel(int x, int y, bool on) {
 	//Render red filled quad

@@ -22,5 +22,6 @@ public:
 	int init(void);
 	void draw_pixel(int x, int y, bool on);
 	void render_frame();
+	void get_keystate(void);
 };
 

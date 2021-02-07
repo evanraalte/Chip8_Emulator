@@ -3,23 +3,8 @@
 
 #include "std_lib_facilities.h"
 #include "Chip8.h"
-constexpr auto KEY_EXIT = 27; // ESC
 
-void get_input(function<void(int)> cb) {
-    while (true) {
-        char input;
-        //cin >> input;
-        input = _getch();
-        int num = (int)input;
-        if (num == KEY_EXIT)
-            return;
-        cb(num);
-        //this_thread::sleep_for(chrono::milliseconds(10));
-    }
-}
-
-
-int main()
+int main(int argc, char* args[])
 {
     Chip8 c8 = Chip8();
 

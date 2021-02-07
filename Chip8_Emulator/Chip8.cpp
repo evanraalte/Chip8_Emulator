@@ -1,31 +1,20 @@
 #include "Chip8.h"
 
-map<int, int> Chip8::key_map = {
-	{ KEY_1, 0x1 },
-	{ KEY_2, 0x2 },
-	{ KEY_3, 0x3 },
-	{ KEY_4, 0xC },
-	{ KEY_Q, 0x4 },
-	{ KEY_W, 0x5 },
-	{ KEY_E, 0x6 },
-	{ KEY_R, 0xD },
-	{ KEY_A, 0x7 },
-	{ KEY_S, 0x8 },
-	{ KEY_D, 0x9 },
-	{ KEY_F, 0xE },
-	{ KEY_Z, 0xA },
-	{ KEY_X, 0x0 },
-	{ KEY_C, 0xB },
-	{ KEY_V, 0xF },
-};
 
 Chip8::Chip8(void)
 	: mem(4096), display(*this) {
 
+
+	// Init button poller
+	//thread t_inp(&Display::poll_input, display);
+	//t_inp.join();
+	//while (true) {
+	//	display.poll_input();
+	//}
+
 	// Init frame_buffer
 	for (uint16_t i = 0; i < frame_buffer.size(); i++) {
-		bool fill = false;// i & 1;
-		//cout << fill << " " << i << endl;
+		bool fill = false;
 		frame_buffer[i].fill(fill);
 	}
 	// Initialize fonts in memory
@@ -69,7 +58,7 @@ void Chip8::decrement_timers(void)
 void Chip8::run(void)
 {
 	while (true) {
-		cout << to_string(pc) << endl;
+		//cout << to_string(pc) << endl;
 		// Fetch
 		uint16_t msb = (uint16_t)mem.read(pc);
 		uint16_t lsb = (uint16_t)mem.read(pc + 1);
@@ -88,29 +77,30 @@ void Chip8::run(void)
 		switch (opc) {
 		case 0x0:
 			if (nn == 0xE0) {
-				cout << "clear screen" << endl;
+
+				//cout << "clear screen" << endl;
 				// clear screen
 			}
 			break;
 		case 0x1:
-			cout << "jump to " << to_string((int)nnn) << endl;
+			//cout << "jump to " << to_string((int)nnn) << endl;
 			pc = nnn;
 			break;
 		case 0x6:
-			cout << "set v[" << to_string((int)x) << "] to " << to_string((int)nn) << endl;
+			//cout << "set v[" << to_string((int)x) << "] to " << to_string((int)nn) << endl;
 			v[x] = nn;
 			break;
 		case 0x7:
-			cout << "set v[" << to_string((int)x) << "] to " << to_string((int)(v[x] + nn)) << endl;
+			//cout << "set v[" << to_string((int)x) << "] to " << to_string((int)(v[x] + nn)) << endl;
 			v[x] += nn;
 			break;
 		case 0xA:
-			cout << "set I to " << to_string((int)nnn) << endl;
+			//cout << "set I to " << to_string((int)nnn) << endl;
 			reg_i = nnn;
 			break;
 		case 0xD:
 			// draw
-			cout << "Draw.." << endl;
+			//cout << "Draw.." << endl;
 			for (int j = 0; j < n; j++) {
 				v[0xf] = 0;
 				uint8_t pos_y = (v[y] & 0x1F) + j;
@@ -136,15 +126,9 @@ void Chip8::run(void)
 			display.render_frame();
 			break;
 		}
+		display.get_keystate();
 		this_thread::sleep_for(chrono::microseconds(16667));
 	}
-}
-
-void Chip8::cb_input(int c)
-{
-
-	cout << "Pressed: " << to_string(key_map[c]) << endl << flush;
-
 }
 
 void Chip8::load_file(string path)
@@ -158,7 +142,6 @@ void Chip8::load_file(string path)
 		mem.write(address, (uint8_t) buffer);
 		address++;
 	}
-
 	f.close();
 }
 
