@@ -59,7 +59,7 @@ int Display::init(void) {
 	return success;
 }
 
-void Display::get_keystate(void) {
+uint16_t Display::get_keystate(void) {
 	SDL_Event e;
 	while ((SDL_PollEvent(&e)) != 0);
 
@@ -81,7 +81,7 @@ void Display::get_keystate(void) {
 	res |= keystate[SDL_SCANCODE_X] << 0x0;
 	res |= keystate[SDL_SCANCODE_C] << 0xB;
 	res |= keystate[SDL_SCANCODE_V] << 0xF;
-	cout << to_string(res) << endl;
+	return res;
 }
 
 void Display::draw_pixel(int x, int y, bool on) {

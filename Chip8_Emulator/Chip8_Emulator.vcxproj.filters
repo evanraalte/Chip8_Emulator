@@ -52,5 +52,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="IBM.ch8" />
+    <None Include="test_opcode.ch8" />
   </ItemGroup>
 </Project>

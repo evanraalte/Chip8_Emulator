@@ -8,7 +8,7 @@ int main(int argc, char* args[])
 {
     Chip8 c8 = Chip8();
 
-    c8.load_file("IBM.ch8");
+    c8.load_file("pong.rom");
     c8.run();
 }
 

@@ -26,6 +26,7 @@ public:
 	array<uint8_t, 16> v;
 	static map<int, int> key_map;
 	array<array<bool, 32>, 64> frame_buffer;
+	void clear_display(void);
 	void load_file(string path);
 	bool get_pixel(int x, int y);
 };

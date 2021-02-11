@@ -1,6 +1,14 @@
 #include "Chip8.h"
 
 
+void Chip8::clear_display(void)
+{
+	for (uint16_t i = 0; i < frame_buffer.size(); i++) {
+		bool fill = false;
+		frame_buffer[i].fill(fill);
+	}
+}
+
 Chip8::Chip8(void)
 	: mem(4096), display(*this) {
 
@@ -13,10 +21,11 @@ Chip8::Chip8(void)
 	//}
 
 	// Init frame_buffer
-	for (uint16_t i = 0; i < frame_buffer.size(); i++) {
-		bool fill = false;
-		frame_buffer[i].fill(fill);
-	}
+	//for (uint16_t i = 0; i < frame_buffer.size(); i++) {
+	//	bool fill = false;
+	//	frame_buffer[i].fill(fill);
+	//}
+	clear_display();
 	// Initialize fonts in memory
 	Font font = Font();
 	uint16_t i = 0;
@@ -59,6 +68,7 @@ void Chip8::run(void)
 {
 	while (true) {
 		//cout << to_string(pc) << endl;
+		decrement_timers();
 		// Fetch
 		uint16_t msb = (uint16_t)mem.read(pc);
 		uint16_t lsb = (uint16_t)mem.read(pc + 1);
@@ -76,15 +86,36 @@ void Chip8::run(void)
 		// Execute
 		switch (opc) {
 		case 0x0:
-			if (nn == 0xE0) {
-
-				//cout << "clear screen" << endl;
-				// clear screen
+			switch(nnn){
+			case 0x0E0:
+				clear_display();
+				display.render_frame();
+				break;
+			case 0x0EE: // return from subroutine
+				pc = stack.back();
+				stack.pop_back();
+				break;
 			}
 			break;
 		case 0x1:
 			//cout << "jump to " << to_string((int)nnn) << endl;
 			pc = nnn;
+			break;
+		case 0x2:
+			stack.push_back(pc);
+			pc = nnn;
+			break;
+		case 0x3:
+			if (v[x] == nn)
+				pc += 2;
+			break;
+		case 0x4:
+			if (v[x] != nn)
+				pc += 2;
+			break;
+		case 0x5:
+			if (v[x] == v[y])
+				pc += 2;
 			break;
 		case 0x6:
 			//cout << "set v[" << to_string((int)x) << "] to " << to_string((int)nn) << endl;
@@ -94,9 +125,54 @@ void Chip8::run(void)
 			//cout << "set v[" << to_string((int)x) << "] to " << to_string((int)(v[x] + nn)) << endl;
 			v[x] += nn;
 			break;
+		case 0x8:
+			switch (n) {
+			case 0:
+				v[x] = v[y];
+				break;
+			case 1:
+				v[x] = v[x] | v[y];
+				break;
+			case 2:
+				v[x] = v[x] & v[y];
+				break;
+			case 3:
+				v[x] = v[x] ^ v[y];
+				break;
+			case 4:
+				v[0xf] = ((uint16_t)v[x] + (uint16_t)v[y] > 0xFF) ? 1 : 0;
+				v[x] = v[x] + v[y];
+				break;
+			case 5:
+				v[0xf] = (v[x] > v[y]) ? 1 : 0;
+				v[x] = v[x] - v[y];
+				break;
+			case 6:
+				v[x] = 0xFF & (v[y] >> 1);
+				v[0xf] = (uint8_t) (v[y] & 0x01);
+				break;
+			case 7:
+				v[0xf] = (v[x] > v[y]) ? 1 : 0;
+				v[x] = v[y] - v[x];
+				break;
+			case 0xE:
+				v[x] = 0xFF & (v[y] << 1);
+				v[0xf] = (uint8_t)((v[y] & 0x80) == 0x80);
+				break;
+			}
+		case 0x9:
+			if (v[x] != v[y])
+				pc += 2;
+			break;
 		case 0xA:
 			//cout << "set I to " << to_string((int)nnn) << endl;
 			reg_i = nnn;
+			break;
+		case 0xB:
+			pc = nnn + v[0];
+			break;
+		case 0xC:
+			v[x] = rand() & nn;
 			break;
 		case 0xD:
 			// draw
@@ -125,9 +201,80 @@ void Chip8::run(void)
 			}
 			display.render_frame();
 			break;
+		case 0xE:
+		{
+			uint16_t key_num = 1 << v[x];
+			switch (nn) {
+			case 0x9e:
+				if ((display.get_keystate() & key_num) == key_num)
+					pc += 2;
+				break;
+			case 0xa1:
+				if ((display.get_keystate() & key_num) != key_num)
+					pc += 2;
+				break;
+			}
 		}
-		display.get_keystate();
-		this_thread::sleep_for(chrono::microseconds(16667));
+		break;
+		case 0xF:
+			switch (nn) {
+			case 0x07:
+				v[x] = delay_timer;
+				break;
+			case 0x0a: 
+			{
+				uint16_t inp_old = display.get_keystate();
+				uint16_t inp = display.get_keystate();
+				while (inp == inp_old) {
+					inp_old = inp;
+					inp = display.get_keystate();
+				}
+				inp = inp - inp_old;
+				uint8_t  cnt = 0;
+				uint16_t  comparee = 0x0001;
+				while (comparee != inp) {
+					cnt++;
+					comparee = comparee << 1;
+					if (cnt == 16)
+						break;
+				}
+				v[x] = cnt;
+			}
+			break;
+			case 0x15:
+				delay_timer = v[x];
+				break;
+			case 0x18:
+				sound_timer = v[x];
+				break;
+			case 0x1e:
+				reg_i += v[x];
+				v[0xf] = (uint16_t)(reg_i > 0xFFF);
+				reg_i = reg_i & 0xFFF;
+				break;
+			case 0x29:
+				reg_i = v[x] & 0x0F;
+				break;
+			case 0x33:
+				mem.write(reg_i + 0, v[x] / 100);
+				mem.write(reg_i + 1, (v[x] % 100) / 10);
+				mem.write(reg_i + 2, v[x] % 10);
+				break;
+			case 0x55:
+				for (int i = 0; i <= x; i++) {
+					mem.write(reg_i + i, v[i]);
+				}
+				reg_i = reg_i + v[x] + 1;
+				break;
+			case 0x65:
+				for (int i = 0; i <= x; i++) {
+					v[i] = mem.read(reg_i + i);
+				}
+				reg_i = reg_i + v[x] + 1;
+				break;
+			}
+		}
+		//this_thread::sleep_for(chrono::microseconds(16667));
 	}
 }
 
