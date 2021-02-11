@@ -253,7 +253,7 @@ void Chip8::run(void)
 				reg_i = reg_i & 0xFFF;
 				break;
 			case 0x29:
-				reg_i = v[x] & 0x0F;
+				reg_i = v[x]*5;
 				break;
 			case 0x33:
 				mem.write(reg_i + 0, v[x] / 100);
@@ -264,17 +264,17 @@ void Chip8::run(void)
 				for (int i = 0; i <= x; i++) {
 					mem.write(reg_i + i, v[i]);
 				}
-				reg_i = reg_i + v[x] + 1;
+				reg_i = reg_i + x + 1;
 				break;
 			case 0x65:
 				for (int i = 0; i <= x; i++) {
 					v[i] = mem.read(reg_i + i);
 				}
-				reg_i = reg_i + v[x] + 1;
+				reg_i = reg_i + x + 1;
 				break;
 			}
 		}
-		//this_thread::sleep_for(chrono::microseconds(16667));
+		this_thread::sleep_for(chrono::microseconds(1666));
 	}
 }
 
